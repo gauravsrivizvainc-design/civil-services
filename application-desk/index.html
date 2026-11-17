@@ -1,0 +1,1000 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Application Desk</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{color-scheme:light}
+[hidden]{display:none!important}
+img{max-width:100%}
+.txt,select.txt{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font:14px var(--font-body);color:var(--ink)}
+.txt+.meta{margin-bottom:10px}
+.sel-label{display:block;font-size:12px;color:var(--ink-2);margin:2px 0 4px}
+</style>
+<style>
+/* Layout: two-pane workbench. Inputs rail on the left, a five-step tabbed results pane on the right.
+   Stacks to one column on phones. Colour: cool grey ground, deep teal accent, amber only for gaps the user must fill. */
+:root{
+  --bg:#F1F4F5; --surface:#FFFFFF; --surface-2:#F6F8F9; --line:#D9E0E4;
+  --ink:#12202A; --ink-2:#4B5C68; --ink-3:#5E6F7B;
+  --accent:#0B6B5D; --accent-ink:#FFFFFF; --accent-soft:#DCEFEA; --accent-line:#A8D3C9;
+  --gap-bg:#FFE7A3; --gap-ink:#563F00;
+  --good:#18794A; --good-soft:#DFF3E8; --warn:#946000; --warn-soft:#FFF1CC; --crit:#B3261E; --crit-soft:#FBE4E2;
+  --font-display:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1418; --surface:#151E24; --surface-2:#1A252C; --line:#2A3841;
+    --ink:#E7EEF2; --ink-2:#A3B4BF; --ink-3:#8A9DA9;
+    --accent:#4FC4AF; --accent-ink:#06211C; --accent-soft:#12312C; --accent-line:#235A51;
+    --gap-bg:#4A3A08; --gap-ink:#FFE08A;
+    --good:#5BD08E; --good-soft:#12301F; --warn:#E0A93B; --warn-soft:#3A2D0A; --crit:#FF8A80; --crit-soft:#3B1815;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1418; --surface:#151E24; --surface-2:#1A252C; --line:#2A3841;
+  --ink:#E7EEF2; --ink-2:#A3B4BF; --ink-3:#8A9DA9;
+  --accent:#4FC4AF; --accent-ink:#06211C; --accent-soft:#12312C; --accent-line:#235A51;
+  --gap-bg:#4A3A08; --gap-ink:#FFE08A;
+  --good:#5BD08E; --good-soft:#12301F; --warn:#E0A93B; --warn-soft:#3A2D0A; --crit:#FF8A80; --crit-soft:#3B1815;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:15px/1.55 var(--font-body);
+  padding-block:22px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{max-width:1240px;margin:0 auto;display:grid;gap:20px}
+
+/* Header */
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px 24px;flex-wrap:wrap}
+.brand{margin:0;font:700 28px/1.1 var(--font-display);letter-spacing:-.015em}
+.sub{margin:6px 0 0;color:var(--ink-2);max-width:62ch;text-wrap:balance}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:minmax(0,22.5rem) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+
+/* Rail */
+.rail{padding:4px 16px 16px}
+.field{padding:14px 0;border-bottom:1px solid var(--line);min-width:0}
+.field-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.field-head label,.legend{font:600 14px/1.3 var(--font-body)}
+textarea{
+  display:block;width:100%;min-height:132px;max-height:360px;resize:vertical;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px 11px;
+  font:13.5px/1.5 var(--font-body);color:var(--ink);
+}
+textarea::placeholder{color:var(--ink-3)}
+textarea.drag{border-color:var(--accent);background:var(--accent-soft)}
+.meta{display:flex;justify-content:space-between;gap:8px;margin-top:7px;font-size:12.5px;color:var(--ink-3);min-height:1.6em}
+.meta .note-err{color:var(--crit)}
+.link{appearance:none;background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;text-underline-offset:2px;cursor:pointer;font-size:12.5px}
+.limits{border:0;margin:0;padding:14px 0 6px;min-width:0}
+.limits-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:8px}
+.num-field label{display:block;font-size:12px;color:var(--ink-2);margin-bottom:4px;line-height:1.25}
+.num-field input{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font:500 14px var(--font-mono)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.status{margin:10px 0 0;font-size:13px;color:var(--ink-2);min-height:1.4em}
+.status.err{color:var(--crit)}
+.fine{margin:12px 0 0;font-size:12px;color:var(--ink-3)}
+
+/* Buttons */
+.btn{
+  appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  padding:8px 14px;border-radius:8px;font:500 14px/1.2 var(--font-body);cursor:pointer;
+}
+.btn:hover{border-color:var(--ink-3)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);flex:1 1 auto;padding:10px 16px;font-weight:600}
+.btn-primary:hover{filter:brightness(1.07);border-color:var(--accent)}
+.btn-sm{padding:5px 10px;font-size:13px}
+
+/* Results */
+.results{min-width:0;padding:0 0 8px}
+.brief{padding:16px 18px 14px;border-bottom:1px solid var(--line);display:grid;gap:8px}
+.brief h2{margin:0;font:700 17px/1.3 var(--font-display)}
+.brief .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.brief .lbl{font:500 11.5px var(--font-mono);color:var(--ink-3);letter-spacing:.04em;text-transform:uppercase;margin-right:2px}
+.brief p{margin:0;font-size:13px;color:var(--ink-2)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{padding:2px 9px;border-radius:999px;font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)}
+.tag.beh{background:var(--accent-soft);border-color:var(--accent-line);color:var(--ink)}
+
+.tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-bottom:1px solid var(--line);padding:0 6px}
+.tab{
+  appearance:none;background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-1px;
+  padding:12px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;
+  font:500 12.5px/1.2 var(--font-body);color:var(--ink-2);cursor:pointer;
+}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.tab .n{
+  width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  border:1.5px solid var(--line);font:500 12px var(--font-mono);background:var(--surface);
+}
+.tab[data-status="writing"] .n{border-color:var(--accent);color:var(--accent);animation:pulse 1.3s ease-in-out infinite}
+.tab[data-status="done"] .n{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tab[data-status="error"] .n{border-color:var(--crit);color:var(--crit)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 5px var(--accent-soft)}}
+.tab .t{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.panel{padding:20px 18px 12px}
+.ph{display:flex;justify-content:space-between;gap:12px 16px;flex-wrap:wrap;align-items:flex-start}
+.eyebrow{margin:0 0 2px;font:500 11.5px var(--font-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.ph h2{margin:0;font:700 22px/1.2 var(--font-display);letter-spacing:-.01em;text-wrap:balance}
+.hint{margin:6px 0 0;color:var(--ink-2);max-width:60ch;font-size:14px}
+.tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.switch{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2);margin-right:4px}
+.meters{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0;min-height:26px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:999px;
+  font:500 12px/1.6 var(--font-mono);background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2);white-space:nowrap;
+}
+.chip.good{background:var(--good-soft);border-color:transparent;color:var(--good)}
+.chip.warn{background:var(--warn-soft);border-color:transparent;color:var(--warn)}
+.chip.crit{background:var(--crit-soft);border-color:transparent;color:var(--crit)}
+.notice{margin:14px 0 0;padding:10px 12px;border-radius:8px;font-size:13.5px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)}
+.notice.err{background:var(--crit-soft);border-color:transparent;color:var(--crit)}
+.notice.warn{background:var(--warn-soft);border-color:transparent;color:var(--warn)}
+.body{margin-top:12px;min-width:0}
+
+/* Document typography */
+.doc{max-width:68ch;font-size:15.5px;line-height:1.62}
+.doc h3{margin:1.6em 0 .35em;font:700 18px/1.3 var(--font-display)}
+.doc h4{margin:1.5em 0 .15em;font:600 15.5px/1.4 var(--font-body)}
+.doc h3:first-child,.doc h4:first-child{margin-top:.2em}
+.doc p{margin:.65em 0}
+.doc ul{margin:.35em 0 .9em;padding-left:1.2em}
+.doc li{margin:.32em 0}
+.doc li::marker{color:var(--ink-3)}
+.doc em{color:var(--ink-2)}
+mark.gap{background:var(--gap-bg);color:var(--gap-ink);padding:0 3px;border-radius:3px}
+.caret::after{content:"";display:inline-block;width:7px;height:1em;margin-left:2px;vertical-align:-2px;background:var(--accent);animation:blink 1s steps(2,start) infinite}
+@keyframes blink{to{visibility:hidden}}
+.edit{max-width:68ch;min-height:360px;max-height:none;font-size:14px;line-height:1.6;font-family:var(--font-body)}
+
+/* STAR */
+.star{border:1px solid var(--line);border-radius:var(--radius);margin:0 0 14px;background:var(--surface);max-width:76ch}
+.star-h{display:flex;justify-content:space-between;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line)}
+.star-h h3{margin:0;font:700 16.5px/1.3 var(--font-display)}
+.star-h .row{display:flex;gap:8px;align-items:center}
+.srow{display:grid;grid-template-columns:1.6rem minmax(0,1fr);gap:10px;padding:10px 14px 2px}
+.srow:last-child{padding-bottom:12px}
+.srow .k{font:500 13px/1.7 var(--font-mono);color:var(--accent)}
+.srow p{margin:0 0 6px;font-size:15px;line-height:1.6}
+.labels-off .srow{grid-template-columns:minmax(0,1fr);gap:0}
+.labels-off .srow .k{display:none}
+
+/* Skeleton */
+.sk{height:12px;border-radius:6px;background:var(--line);margin:12px 0;animation:sk 1.5s ease-in-out infinite}
+@keyframes sk{0%,100%{opacity:.55}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  .sk,.caret::after,.tab[data-status="writing"] .n{animation:none}
+}
+@media (max-width:520px){
+  .brand{font-size:24px}
+  .panel{padding:16px 12px 8px}
+  .brief{padding:14px 12px 12px}
+  .tab{font-size:11.5px}
+  .limits-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <h1 class="brand">Application Desk</h1>
+      <p class="sub">Add your CV and a job advert. Get the five parts of a Civil Service application, written from your own experience and held to the word limits.</p>
+    </div>
+    <div class="tools"><button class="btn" id="saveAll" hidden>Save all as Markdown</button></div>
+  </header>
+
+  <div class="layout">
+    <aside class="rail card" aria-label="Inputs">
+      <div class="field" id="f-cv">
+        <div class="field-head">
+          <label for="cv">Your CV</label>
+          <button class="btn btn-sm" type="button" data-pick="cv">Upload file</button>
+        </div>
+        <textarea id="cv" spellcheck="false" placeholder="Drop a PDF, Word or text file here, or paste your CV text."></textarea>
+        <input type="file" id="cv-file" accept=".pdf,.docx,.txt,.md,text/plain,application/pdf" hidden>
+        <div class="meta"><span id="cv-meta">No CV yet</span><button class="link" type="button" id="cv-clear" hidden>Clear</button></div>
+      </div>
+
+      <div class="field" id="f-jd">
+        <div class="field-head">
+          <label for="jd">Job advert</label>
+          <button class="btn btn-sm" type="button" data-pick="jd">Upload file</button>
+        </div>
+        <textarea id="jd" spellcheck="false" placeholder="Paste the whole advert: responsibilities, essential criteria, behaviours, word limits and anything about the organisation."></textarea>
+        <input type="file" id="jd-file" accept=".pdf,.docx,.txt,.md,text/plain,application/pdf" hidden>
+        <div class="meta"><span id="jd-meta">No advert yet</span><button class="link" type="button" id="jd-clear" hidden>Clear</button></div>
+      </div>
+
+      <div class="field" id="f-key" hidden>
+        <div class="field-head"><label for="api-key">Anthropic API key</label></div>
+        <input class="txt" type="password" id="api-key" autocomplete="off" spellcheck="false" placeholder="sk-ant-...">
+        <div class="meta"><span>Used from this browser tab only. Forgotten when you close it.</span></div>
+        <label class="sel-label" for="api-model">Model</label>
+        <select class="txt" id="api-model">
+          <option value="claude-sonnet-5-5">Claude Sonnet 5.5 (recommended)</option>
+          <option value="claude-opus-5-5">Claude Opus 5.5 (slower, strongest)</option>
+          <option value="claude-haiku-5-5">Claude Haiku 5.5 (fastest)</option>
+        </select>
+      </div>
+
+      <fieldset class="limits">
+        <legend class="legend">Limits</legend>
+        <div class="limits-grid">
+          <div class="num-field"><label for="lim-statement">Personal statement words</label><input type="number" id="lim-statement" min="100" max="3000" step="10" value="750"></div>
+          <div class="num-field"><label for="lim-count">STAR statements</label><input type="number" id="lim-count" min="1" max="8" step="1" value="4"></div>
+          <div class="num-field"><label for="lim-star">Words per STAR</label><input type="number" id="lim-star" min="50" max="1000" step="10" value="250"></div>
+        </div>
+      </fieldset>
+
+      <div class="actions">
+        <button class="btn btn-primary" type="button" id="go">Build my application</button>
+        <button class="btn" type="button" id="stop" hidden>Stop</button>
+      </div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <p class="fine">Your CV text stays in this browser so you can reuse it for the next advert. Both texts are sent to Anthropic\u2019s API to write the answers.</p>
+    </aside>
+
+    <main class="results card" id="results" aria-label="Your application">
+      <div class="brief" id="brief" hidden></div>
+      <div class="tabs" id="tabs" role="tablist" aria-label="Application sections"></div>
+      <div class="panel" id="panel" role="tabpanel"></div>
+    </main>
+  </div>
+</div>
+
+
+<script>
+/* Standalone shim: gives the page the same sample/downloads API it has inside Claude,
+   backed by the Anthropic Messages API with a key the user pastes in. */
+(function () {
+  if (window.claude && window.claude.use) return;
+  var MODELS = { quick: 'claude-haiku-5-5' };
+  var keyBox = document.getElementById('api-key'), modelSel = document.getElementById('api-model');
+  document.getElementById('f-key').hidden = false;
+  try { keyBox.value = sessionStorage.getItem('ad-key') || ''; } catch (e) {}
+  keyBox.addEventListener('input', function () { try { sessionStorage.setItem('ad-key', keyBox.value.trim()); } catch (e) {} });
+
+  function fail(code, message, text) { var e = { code: code, message: message }; if (text) e.text = text; return e; }
+
+  async function call(input, opts) {
+    opts = opts || {};
+    var key = keyBox.value.trim();
+    if (!key) throw fail('no_key', 'Missing API key');
+    var model = opts.modelTier === 'quick' ? MODELS.quick : modelSel.value;
+    var res;
+    try {
+      res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST', signal: opts.signal,
+        headers: {
+          'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({ model: model, max_tokens: 8192, stream: true, messages: [{ role: 'user', content: input }] })
+      });
+    } catch (e) {
+      if (e && e.name === 'AbortError') throw fail('cancelled', 'Cancelled');
+      throw fail('upstream_error', 'Network error');
+    }
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) throw fail('bad_key', 'Key rejected');
+      if (res.status === 429) throw fail('rate_limited', 'Rate limited');
+      if (res.status === 413) throw fail('prompt_too_large', 'Too large');
+      throw fail('upstream_error', 'HTTP ' + res.status);
+    }
+    var reader = res.body.getReader(), dec = new TextDecoder(), buf = '', text = '', stop = null;
+    try {
+      for (;;) {
+        var r = await reader.read();
+        if (r.done) break;
+        buf += dec.decode(r.value, { stream: true });
+        var parts = buf.split('\n\n'); buf = parts.pop();
+        for (var p = 0; p < parts.length; p++) {
+          var lines = parts[p].split('\n');
+          for (var l = 0; l < lines.length; l++) {
+            if (lines[l].indexOf('data:') !== 0) continue;
+            var d; try { d = JSON.parse(lines[l].slice(5)); } catch (e) { continue; }
+            if (d.type === 'content_block_delta' && d.delta && d.delta.type === 'text_delta') {
+              text += d.delta.text;
+              if (opts.onText) opts.onText({ text: text, delta: d.delta.text });
+            } else if (d.type === 'message_delta' && d.delta && d.delta.stop_reason) {
+              stop = d.delta.stop_reason;
+            } else if (d.type === 'error') {
+              throw fail('upstream_error', (d.error && d.error.message) || 'Error', text);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      if (e && e.code) throw e;
+      if (e && e.name === 'AbortError') throw fail('cancelled', 'Cancelled', text);
+      throw fail('upstream_error', 'Connection dropped', text);
+    }
+    if (!text.trim()) throw fail('empty_completion', 'Empty reply');
+    return { text: text, truncated: stop === 'max_tokens' };
+  }
+
+  var sample = function (input, opts) { return call(input, opts); };
+  sample.json = async function (input, opts) {
+    var r = await call(input, opts), t = r.text.trim();
+    try { return JSON.parse(t); } catch (e) {}
+    var a = t.indexOf('{'), b = t.lastIndexOf('}');
+    if (a >= 0 && b > a) { try { return JSON.parse(t.slice(a, b + 1)); } catch (e) {} }
+    throw fail('invalid_json', 'No JSON in reply', t);
+  };
+  var downloads = {
+    save: async function (req) {
+      var blob = new Blob([req.data], { type: 'text/markdown' });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = req.filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+      return { status: 'saved' };
+    }
+  };
+  window.claude = { use: async function (n) { return n === 'sample' ? sample : (n === 'downloads' ? downloads : null); } };
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- constants ---------- */
+  var SECTIONS = [
+    { id: 'history',   short: 'History',   title: 'Employment History',
+      hint: 'Every role in your CV, newest first, with responsibilities and results rewritten to match this advert. Nothing is added that your CV does not support.' },
+    { id: 'skills',    short: 'Skills',    title: 'Previous Skills and Experience',
+      hint: 'Your tools and skills grouped by the advert\u2019s essential criteria, each tied to a real example from your CV, plus a short list of criteria your CV does not yet evidence.' },
+    { id: 'statement', short: 'Statement', title: 'Personal Statement',
+      hint: 'A first-person statement written to the word limit. It answers the essential criteria with your own examples and links them to the organisation\u2019s aims.' },
+    { id: 'star',      short: 'STAR',      title: 'Behaviour Statements',
+      hint: 'One statement per behaviour, each using a different example and split into Situation, Task, Action and Result, held to the word limit.' },
+    { id: 'tech',      short: 'Tech prep', title: 'Technical and Competency Preparation',
+      hint: 'Likely technical and competency questions for this role, with model answers drawn from your CV and the points to land in the interview.' }
+  ];
+  var STAR_LABEL = { S: 'Situation', T: 'Task', A: 'Action', R: 'Result' };
+  var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  var PDFWORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  var MAMMOTH = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+
+  var RULES = [
+    'You are an expert UK Civil Service application writer who knows the Success Profiles framework well.',
+    '',
+    'Ground rules for everything you write:',
+    '- My CV is the only source of facts about me. Never invent employers, job titles, dates, qualifications, tools, projects, responsibilities or numbers. If a figure or detail would make an answer stronger but the CV does not give it, write a placeholder in exactly this form: [ADD: what I should add]. Never guess the figure yourself.',
+    '- Write in professional British English, in the first person, in a natural, confident, human voice. No filler, no buzzwords, no em dashes, no repeated sentence openings.',
+    '- Tailor everything to this advert: its responsibilities, essential and desirable criteria, required skills, organisation and values. Echo its keywords only where my CV supports them. Use Success Profiles terms (behaviours, strengths, technical, experience) where they fit.',
+    '- Pitch the level of responsibility to the grade and role advertised without overstating mine.',
+    '- Plain text only. The only markup allowed is what the task names: lines starting "## " or "### ", lines starting "- ", and **bold**. No tables, no code fences, no preamble, no sign-off, no commentary about what you did.'
+  ].join('\n');
+
+  /* ---------- state ---------- */
+  var state = {
+    cv: '', jd: '', analysis: null, tab: 0, running: false, follow: true, ctl: null,
+    sample: null, downloads: null, showLabels: true,
+    limits: { statement: 750, star: 250, count: 4 },
+    touched: { statement: false, star: false },
+    sections: SECTIONS.map(function () { return { status: 'idle', text: '', error: '', note: '', truncated: false, editing: false }; })
+  };
+
+  /* ---------- helpers ---------- */
+  function $(s, r) { return (r || document).querySelector(s); }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function wc(t) { var m = String(t).trim().match(/\S+/g); return m ? m.length : 0; }
+  function fmt(n) { return n.toLocaleString('en-GB'); }
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+  var els = {
+    cv: $('#cv'), jd: $('#jd'), cvMeta: $('#cv-meta'), jdMeta: $('#jd-meta'),
+    cvClear: $('#cv-clear'), jdClear: $('#jd-clear'),
+    limStatement: $('#lim-statement'), limCount: $('#lim-count'), limStar: $('#lim-star'),
+    go: $('#go'), stop: $('#stop'), status: $('#status'),
+    tabs: $('#tabs'), panel: $('#panel'), brief: $('#brief'), results: $('#results'), saveAll: $('#saveAll')
+  };
+
+  function setStatus(msg, isErr) {
+    els.status.textContent = msg || '';
+    els.status.className = 'status' + (isErr ? ' err' : '');
+  }
+
+  /* ---------- text from files ---------- */
+  var scriptCache = {};
+  function loadScript(url) {
+    if (!scriptCache[url]) {
+      scriptCache[url] = new Promise(function (res, rej) {
+        var s = document.createElement('script');
+        s.src = url; s.onload = function () { res(); };
+        s.onerror = function () { delete scriptCache[url]; rej(new Error('Could not load a reader for this file type.')); };
+        document.head.appendChild(s);
+      });
+    }
+    return scriptCache[url];
+  }
+
+  function readAsBuffer(file) {
+    return new Promise(function (res, rej) {
+      var r = new FileReader();
+      r.onload = function () { res(r.result); };
+      r.onerror = function () { rej(new Error('Could not read that file.')); };
+      r.readAsArrayBuffer(file);
+    });
+  }
+  function readAsText(file) {
+    return new Promise(function (res, rej) {
+      var r = new FileReader();
+      r.onload = function () { res(String(r.result)); };
+      r.onerror = function () { rej(new Error('Could not read that file.')); };
+      r.readAsText(file);
+    });
+  }
+
+  async function readPdf(buf) {
+    await loadScript(PDFJS);
+    try { await loadScript(PDFWORKER); } catch (e) { /* falls back to the bundled main-thread reader */ }
+    var lib = window.pdfjsLib;
+    lib.GlobalWorkerOptions.workerSrc = PDFWORKER;
+    var pdf = await lib.getDocument({ data: new Uint8Array(buf) }).promise;
+    var pages = [];
+    for (var p = 1; p <= pdf.numPages; p++) {
+      var page = await pdf.getPage(p);
+      var tc = await page.getTextContent();
+      var lines = [], line = '', lastY = null;
+      tc.items.forEach(function (it) {
+        if (typeof it.str !== 'string') return;
+        var y = it.transform ? it.transform[5] : null;
+        if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) { lines.push(line); line = ''; }
+        line += it.str;
+        if (it.hasEOL) { lines.push(line); line = ''; }
+        lastY = y;
+      });
+      lines.push(line);
+      pages.push(lines.join('\n'));
+    }
+    return pages.join('\n\n');
+  }
+
+  async function readDocx(buf) {
+    await loadScript(MAMMOTH);
+    var r = await window.mammoth.extractRawText({ arrayBuffer: buf });
+    return r.value;
+  }
+
+  function tidy(t) {
+    return String(t).replace(/\r/g, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  async function extractText(file) {
+    var name = (file.name || '').toLowerCase();
+    if (/\.pdf$/.test(name) || file.type === 'application/pdf') return tidy(await readPdf(await readAsBuffer(file)));
+    if (/\.docx$/.test(name)) return tidy(await readDocx(await readAsBuffer(file)));
+    if (/\.(txt|md|text)$/.test(name) || /^text\//.test(file.type)) return tidy(await readAsText(file));
+    if (/\.doc$/.test(name)) throw new Error('Old .doc files are not supported. Save it as .docx or PDF, or paste the text.');
+    throw new Error('Use a PDF, Word (.docx) or text file, or paste the text.');
+  }
+
+  async function handleFile(file, kind) {
+    if (!file) return;
+    var meta = kind === 'cv' ? els.cvMeta : els.jdMeta;
+    meta.className = ''; meta.textContent = 'Reading ' + file.name + '\u2026';
+    try {
+      var text = await extractText(file);
+      if (wc(text) < 20) throw new Error('Almost no text came out of ' + file.name + '. If it is a scanned PDF, paste the text instead.');
+      els[kind].value = text;
+      onInput(kind);
+      meta.textContent = file.name + ' \u00b7 ' + fmt(wc(text)) + ' words';
+    } catch (e) {
+      meta.innerHTML = '<span class="note-err">' + esc(e.message || 'Could not read that file.') + '</span>';
+    }
+  }
+
+  function onInput(kind) {
+    state[kind] = els[kind].value;
+    var n = wc(state[kind]);
+    var meta = kind === 'cv' ? els.cvMeta : els.jdMeta;
+    var clr = kind === 'cv' ? els.cvClear : els.jdClear;
+    meta.className = '';
+    meta.textContent = n ? fmt(n) + ' words' + (kind === 'cv' ? ' \u00b7 remembered in this browser' : '') : (kind === 'cv' ? 'No CV yet' : 'No advert yet');
+    clr.hidden = !n;
+    if (kind === 'cv') { clearTimeout(onInput._t); onInput._t = setTimeout(function () { n ? lsSet('ad-cv', state.cv) : lsDel('ad-cv'); }, 400); }
+  }
+
+  /* ---------- light markdown ---------- */
+  function inline(s) {
+    s = esc(s);
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/(^|[\s(])\*([^*\n]+?)\*(?=[\s).,;:!?]|$)/g, '$1<em>$2</em>');
+    s = s.replace(/\[ADD:([^\]]*)\]/g, '<mark class="gap">[ADD:$1]</mark>');
+    return s;
+  }
+  function mdToHtml(text) {
+    var html = '', list = false, para = [];
+    function flushP() { if (para.length) { html += '<p>' + inline(para.join(' ')) + '</p>'; para = []; } }
+    function closeL() { if (list) { html += '</ul>'; list = false; } }
+    text.split('\n').forEach(function (raw) {
+      var ln = raw.replace(/\s+$/, ''), m;
+      if (!ln.trim()) { flushP(); closeL(); return; }
+      if ((m = ln.match(/^###\s+(.*)/))) { flushP(); closeL(); html += '<h4>' + inline(m[1]) + '</h4>'; }
+      else if ((m = ln.match(/^##?\s+(.*)/))) { flushP(); closeL(); html += '<h3>' + inline(m[1]) + '</h3>'; }
+      else if ((m = ln.match(/^\s*[-\u2022*]\s+(.*)/))) { flushP(); if (!list) { html += '<ul>'; list = true; } html += '<li>' + inline(m[1]) + '</li>'; }
+      else { closeL(); para.push(ln.trim()); }
+    });
+    flushP(); closeL();
+    return html;
+  }
+  function strip(t) {
+    return String(t)
+      .replace(/^#{1,4}\s+/gm, '')
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/(^|[\s(])\*([^*\n]+?)\*(?=[\s).,;:!?]|$)/g, '$1$2')
+      .replace(/^\s*[-*\u2022]\s+/gm, '\u2022 ');
+  }
+  function gaps(t) { var m = String(t).match(/\[ADD:/g); return m ? m.length : 0; }
+
+  /* ---------- STAR parsing ---------- */
+  function parseStar(text) {
+    var parts = String(text).split(/^===\s*/m);
+    parts.shift();
+    return parts.map(function (p) {
+      var lines = p.split('\n');
+      var name = (lines.shift() || '').trim().replace(/^[:\-\u2013]\s*/, '');
+      var b = { name: name, S: '', T: '', A: '', R: '', notes: [] }, cur = null;
+      lines.forEach(function (ln) {
+        var m = ln.match(/^\s*(S|T|A|R)\s*:\s*(.*)$/);
+        if (m) { cur = m[1]; b[cur] = (b[cur] ? b[cur] + ' ' : '') + m[2].trim(); }
+        else if (/^\s*NOTE\s*:/i.test(ln)) { b.notes.push(ln.trim().replace(/^NOTE\s*:\s*/i, '')); cur = null; }
+        else if (ln.trim() && cur) { b[cur] += ' ' + ln.trim(); }
+      });
+      return b;
+    });
+  }
+  function starWords(b) { return wc([b.S, b.T, b.A, b.R].join(' ')); }
+  function starSerialize(blocks) {
+    var out = [];
+    blocks.forEach(function (b) {
+      out.push('=== ' + b.name + '\nS: ' + b.S + '\nT: ' + b.T + '\nA: ' + b.A + '\nR: ' + b.R);
+    });
+    var notes = [];
+    blocks.forEach(function (b) { b.notes.forEach(function (n) { notes.push('NOTE: ' + n); }); });
+    return out.join('\n\n') + (notes.length ? '\n\n' + notes.join('\n') : '');
+  }
+  function starProse(b) { return [b.S, b.T, b.A, b.R].filter(Boolean).join('\n\n'); }
+
+  /* ---------- plain-text output ---------- */
+  function plainSection(i) {
+    var s = state.sections[i];
+    if (i === 3) return parseStar(s.text).map(function (b) { return b.name + '\n\n' + starProse(b); }).join('\n\n\n');
+    return strip(s.text).trim();
+  }
+  function packMarkdown() {
+    var parts = ['# Application pack'];
+    var a = state.analysis;
+    if (a && (a.role || a.organisation)) parts.push([a.role, a.organisation].filter(Boolean).join(', '));
+    SECTIONS.forEach(function (sec, i) {
+      var s = state.sections[i];
+      if (!s.text) return;
+      var body;
+      if (i === 3) {
+        body = parseStar(s.text).map(function (b) {
+          return '### ' + b.name + '\n\n' + ['S', 'T', 'A', 'R'].filter(function (k) { return b[k]; }).map(function (k) { return '**' + STAR_LABEL[k] + '.** ' + b[k]; }).join('\n\n');
+        }).join('\n\n');
+      } else {
+        body = s.text.replace(/^(#{2,3}) /gm, '$1# ');
+      }
+      parts.push('## ' + (i + 1) + '. ' + sec.title + '\n\n' + body);
+    });
+    return parts.join('\n\n');
+  }
+
+  /* ---------- rendering ---------- */
+  function buildTabs() {
+    els.tabs.innerHTML = SECTIONS.map(function (sec, i) {
+      return '<button class="tab" role="tab" type="button" id="tab-' + i + '" data-i="' + i + '" aria-controls="panel" aria-selected="false" data-status="idle" tabindex="-1">' +
+        '<span class="n">' + (i + 1) + '</span><span class="t">' + esc(sec.short) + '</span></button>';
+    }).join('');
+  }
+  function renderTabs() {
+    Array.prototype.forEach.call(els.tabs.children, function (b, i) {
+      var sel = i === state.tab;
+      b.setAttribute('aria-selected', sel ? 'true' : 'false');
+      b.tabIndex = sel ? 0 : -1;
+      b.dataset.status = state.sections[i].status;
+    });
+  }
+
+  function meterChips(i) {
+    var s = state.sections[i], h = '';
+    if (!s.text) return '';
+    if (i === 2) {
+      var n = wc(strip(s.text)), lim = state.limits.statement;
+      var cls = n > lim ? 'crit' : (n > lim * 0.97 ? 'warn' : 'good');
+      h += '<span class="chip ' + cls + '">' + fmt(n) + ' / ' + fmt(lim) + ' words</span>';
+    } else if (i === 3) {
+      var blocks = parseStar(s.text), over = blocks.filter(function (b) { return starWords(b) > state.limits.star; }).length;
+      h += '<span class="chip">' + blocks.length + ' of ' + state.limits.count + ' statements</span>';
+      if (over) h += '<span class="chip crit">' + over + ' over the limit</span>';
+    }
+    var g = gaps(s.text);
+    if (g) h += '<span class="chip warn">' + g + (g === 1 ? ' gap' : ' gaps') + ' to fill</span>';
+    return h;
+  }
+
+  function bodyHtml(i) {
+    var s = state.sections[i], sec = SECTIONS[i];
+    if (s.editing) {
+      var extra = i === 3 ? '<p class="hint">Keep the === line and the S:, T:, A:, R: markers so the cards can read your edits.</p>' : '';
+      return extra + '<textarea class="edit" id="edit-box" spellcheck="true">' + esc(s.text) + '</textarea>';
+    }
+    if (!s.text) {
+      if (s.status === 'writing') {
+        return '<div class="doc" aria-hidden="true"><div class="sk" style="width:92%"></div><div class="sk" style="width:78%"></div><div class="sk" style="width:86%"></div><div class="sk" style="width:55%"></div></div>' +
+          '<p class="hint">Claude is writing this section. The first words can take up to a minute.</p>';
+      }
+      if (s.status === 'error') return '';
+      return '<p class="hint">Add your CV and the advert, then choose <strong>Build my application</strong>. This section will appear here.</p>';
+    }
+    var cls = s.status === 'writing' ? ' caret' : '';
+    if (i === 3) {
+      var blocks = parseStar(s.text);
+      if (!blocks.length) return '<div class="doc' + cls + '">' + mdToHtml(s.text) + '</div>';
+      var h = '<div class="stars' + (state.showLabels ? '' : ' labels-off') + '">';
+      blocks.forEach(function (b, k) {
+        var n = starWords(b), lim = state.limits.star;
+        var c = n > lim ? 'crit' : (n > lim * 0.97 ? 'warn' : 'good');
+        h += '<article class="star"><div class="star-h"><h3>' + esc(b.name) + '</h3><div class="row"><span class="chip ' + c + '">' + n + ' / ' + lim + '</span>' +
+          '<button class="btn btn-sm" type="button" data-act="copyStar" data-k="' + k + '">Copy</button></div></div>';
+        ['S', 'T', 'A', 'R'].forEach(function (key) {
+          if (b[key]) h += '<div class="srow"><span class="k" title="' + STAR_LABEL[key] + '" aria-label="' + STAR_LABEL[key] + '">' + key + '</span><p>' + inline(b[key]) + '</p></div>';
+        });
+        h += '</article>';
+      });
+      var notes = [];
+      blocks.forEach(function (b) { b.notes.forEach(function (n) { notes.push(n); }); });
+      if (notes.length) h += '<p class="hint">' + notes.map(inline).join(' ') + '</p>';
+      return h + '</div>';
+    }
+    return '<div class="doc' + cls + '">' + mdToHtml(s.text) + '</div>';
+  }
+
+  function renderPanel() {
+    var i = state.tab, s = state.sections[i], sec = SECTIONS[i];
+    var canAct = !state.running;
+    var tools = '';
+    if (i === 3 && s.text) tools += '<label class="switch"><input type="checkbox" id="labels-toggle"' + (state.showLabels ? ' checked' : '') + '> Show S, T, A, R labels</label>';
+    if (s.text && s.status !== 'writing') {
+      tools += '<button class="btn btn-sm" type="button" data-act="edit">' + (s.editing ? 'Done editing' : 'Edit') + '</button>';
+      tools += '<button class="btn btn-sm" type="button" data-act="copy">Copy</button>';
+    }
+    if (s.text || s.status === 'error') tools += '<button class="btn btn-sm" type="button" data-act="regen"' + (canAct ? '' : ' disabled') + '>' + (s.status === 'error' ? 'Retry' : 'Rewrite') + '</button>';
+
+    var notice = '';
+    if (s.error) notice += '<div class="notice err">' + esc(s.error) + '</div>';
+    if (s.note) notice += '<div class="notice">' + esc(s.note) + '</div>';
+    if (s.truncated) notice += '<div class="notice warn">This section was cut off by the length limit. Choose Rewrite to try again.</div>';
+
+    els.panel.setAttribute('aria-labelledby', 'tab-' + i);
+    els.panel.innerHTML =
+      '<div class="ph"><div><p class="eyebrow">Part ' + (i + 1) + ' of 5</p><h2>' + esc(sec.title) + '</h2><p class="hint">' + esc(sec.hint) + '</p></div>' +
+      '<div class="tools">' + tools + '</div></div>' +
+      '<div class="meters" id="meters">' + meterChips(i) + '</div>' + notice +
+      '<div class="body" id="body">' + bodyHtml(i) + '</div>';
+  }
+
+  function renderBrief() {
+    var a = state.analysis;
+    if (!a) { els.brief.hidden = true; els.brief.innerHTML = ''; return; }
+    els.brief.hidden = false;
+    var head = [a.role, a.organisation].filter(Boolean).join(' \u00b7 ') || 'Advert read';
+    var sub = [a.grade, a.location].filter(Boolean).join(' \u00b7 ');
+    var h = '<h2>' + esc(head) + '</h2>';
+    if (sub) h += '<p>' + esc(sub) + '</p>';
+    function row(label, arr, cls) {
+      if (!arr || !arr.length) return '';
+      return '<div class="row"><span class="lbl">' + label + '</span><div class="tags">' + arr.slice(0, 10).map(function (x) { return '<span class="tag ' + (cls || '') + '">' + esc(x) + '</span>'; }).join('') + '</div></div>';
+    }
+    h += row('Behaviours', a.behaviours, 'beh');
+    h += row('Skills asked for', a.technical, '');
+    var lim = [];
+    if (a.personalStatementWordLimit) lim.push('personal statement ' + a.personalStatementWordLimit + ' words');
+    if (a.behaviourWordLimit) lim.push('each behaviour ' + a.behaviourWordLimit + ' words');
+    if (lim.length) h += '<p>Word limits in the advert: ' + esc(lim.join(', ')) + '.</p>';
+    if (a.applicationQuestions && a.applicationQuestions.length) {
+      h += '<p>The advert also asks: ' + esc(a.applicationQuestions.slice(0, 4).join('; ')) + '. These are not part of the five sections below.</p>';
+    }
+    els.brief.innerHTML = h;
+  }
+
+  function renderAll() {
+    renderTabs(); renderPanel(); renderBrief();
+    var any = state.sections.some(function (s) { return s.text; });
+    els.saveAll.hidden = !(state.downloads && any);
+    els.go.disabled = state.running;
+    els.stop.hidden = !state.running;
+    els.go.textContent = state.running ? 'Writing\u2026' : 'Build my application';
+  }
+
+  var raf = 0;
+  function scheduleRender(i) {
+    if (raf) return;
+    raf = requestAnimationFrame(function () {
+      raf = 0;
+      renderTabs();
+      if (state.tab === i && !state.sections[i].editing) {
+        var body = $('#body'), m = $('#meters');
+        if (body) body.innerHTML = bodyHtml(i);
+        if (m) m.innerHTML = meterChips(i);
+      }
+    });
+  }
+
+  function selectTab(i, manual) {
+    if (manual) state.follow = false;
+    state.tab = i;
+    renderTabs(); renderPanel();
+  }
+
+  /* ---------- prompts ---------- */
+  function ctxBlock() {
+    var a = state.analysis;
+    return '<cv>\n' + state.cv + '\n</cv>\n\n<job_description>\n' + state.jd + '\n</job_description>' +
+      (a ? '\n\n<jd_analysis>\n' + JSON.stringify(a) + '\n</jd_analysis>' : '');
+  }
+  function earlier(i, idxs, cap) {
+    return idxs.filter(function (k) { return state.sections[k].text; }).map(function (k) {
+      var tag = SECTIONS[k].id;
+      return '<' + tag + '>\n' + state.sections[k].text.slice(0, cap || 5000) + '\n</' + tag + '>';
+    }).join('\n\n');
+  }
+
+  function buildPrompt(i) {
+    var L = state.limits, out;
+    if (i === 0) {
+      out = 'TASK: Employment History.\n' +
+        'List every role in my CV in reverse chronological order. For each role use exactly this layout:\n' +
+        '### Job title | Employer\n' +
+        '*Dates exactly as the CV gives them \u00b7 location if the CV gives it*\n' +
+        '- 3 to 6 bullets\n\n' +
+        'Rewrite the responsibilities and results so they speak to this advert\u2019s essential criteria and keywords, leading with the most relevant. Start each bullet with a strong past-tense verb (present tense for a current role). Use only measurable results that appear in the CV; otherwise describe the impact in plain terms. Use an [ADD: ...] placeholder only where a missing figure, date, title or employer would clearly matter, and no more than four across the section. Do not add roles, education or a summary.';
+    } else if (i === 1) {
+      out = 'TASK: Previous Skills and Experience.\n' +
+        'Group my skills under 4 to 6 headings taken from the advert\u2019s essential criteria and required skills. Each heading is a line starting "## ". Under each heading write 2 to 4 bullets. Each bullet names the skill or tool, says where I used it (employer and role from the CV), what I did and what it achieved. Cover SQL, Python, R, Power BI, Tableau, Excel, statistical analysis, ETL pipelines, data modelling, data quality, reporting, automation and stakeholder engagement only where the CV supports them and the advert needs them. Use different wording from the employment history bullets.\n' +
+        'Finish with a final heading "## Not yet evidenced in your CV" listing any essential or desirable criteria or skills from the advert that the CV does not clearly show, one bullet each, with a short suggestion for what I could add if I have it (as an [ADD: ...] prompt). If nothing is missing, write one bullet saying so.\n\n' +
+        earlier(1, [0], 4000);
+    } else if (i === 2) {
+      out = 'TASK: Personal Statement.\n' +
+        'Write my personal statement for this application. Hard limit: ' + L.statement + ' words, counting every word. Aim for between ' + (L.statement - 40) + ' and ' + (L.statement - 8) + ' words. If the advert gives a lower limit, use that instead.\n' +
+        'Use 5 to 7 short paragraphs and no headings. Open with why this role and why this organisation, using specifics from the advert. Then address the essential criteria and person specification one at a time, each backed by a concrete example from my CV with a measurable result where the CV gives one. Link my experience to the organisation\u2019s objectives and values, and close with what I would contribute. Do not copy the CV wording or the employment history bullets. Output only the statement.\n\n' +
+        earlier(2, [0], 4000);
+    } else if (i === 3) {
+      var K = L.count, W = L.star;
+      out = 'TASK: ' + K + ' behaviour statements using STAR.\n' +
+        'Choose the behaviours: use the Civil Service behaviours the advert names, in the order listed (see jd_analysis.behaviours). If the advert names fewer than ' + K + ', add the most relevant remaining Success Profiles behaviours for this role until there are ' + K + '. If it names more than ' + K + ', write the first ' + K + ' and add one final line beginning "NOTE:" saying which others the advert also asks for.\n' +
+        'Use a different example from my CV for each behaviour, and avoid the main example used in the personal statement. Each statement is a first-person STAR answer. Hard limit: ' + W + ' words per statement, counting every word after the S:/T:/A:/R: markers. Aim for ' + (W - 30) + ' to ' + (W - 5) + ' words. If the advert gives a lower limit, use that. Rough split: Situation 15%, Task 10%, Action 50%, Result 25%. The Action says what I personally did, including decisions, tools and methods. The Result gives the outcome and impact, with a figure only if the CV supports it, otherwise an [ADD: ...] placeholder.\n' +
+        'Use exactly this layout for every statement, with a blank line between statements and nothing else:\n' +
+        '=== Behaviour name\nS: ...\nT: ...\nA: ...\nR: ...\n\n' +
+        earlier(3, [2], 4000);
+    } else {
+      out = 'TASK: Technical and competency interview preparation.\n' +
+        'Write 8 likely interview questions for this role, mixing technical and competency questions drawn from the advert. Cover, only where the advert makes them relevant: SQL and Python; statistical analysis and interpretation; data visualisation and BI tools; data quality and governance; ETL pipelines and data warehousing; research and evaluation; monitoring and performance measurement; problem-solving; project and programme management; stakeholder communication.\n' +
+        'For each question use exactly this layout:\n' +
+        '### The question\n' +
+        'A model answer of 90 to 140 words in the first person, built on evidence from my CV. Use a different example from the behaviour statements where the CV allows.\n' +
+        '- **Land these points:** two or three short points separated by semicolons\n' +
+        '- **Likely follow-up:** one follow-up question\n\n' +
+        'If the advert needs a skill my CV does not evidence, write "Not evidenced in CV:" and one honest line on how I would approach it, in place of a made-up answer.\n\n' +
+        earlier(4, [3], 6000);
+    }
+    return RULES + '\n\n' + out + '\n\n' + ctxBlock();
+  }
+
+  /* ---------- Claude calls ---------- */
+  function errCopy(e) {
+    switch (e && e.code) {
+      case 'cancelled': return 'Stopped before this section finished.';
+      case 'no_key': return 'Add your Anthropic API key in the box on the left, then try again.';
+      case 'bad_key': return 'The API key was not accepted. Check it and try again.';
+      case 'not_granted': return 'Claude access was declined for this page, so nothing can be written. Reload the page and allow it when asked.';
+      case 'sampling_disabled': case 'capability_disabled': case 'capability_removed': case 'not_declared':
+        return 'Claude is not available for this account in this view.';
+      case 'rate_limited': return 'You have reached a usage limit for now. Sections already written are kept. Try again later.';
+      case 'session_expired': return 'Your session has expired. Sign in to Claude again, then retry.';
+      case 'prompt_too_large': return 'The CV and advert together are too long. Shorten the pasted text and try again.';
+      case 'refused': return 'Claude could not write this section from the text given. Check the CV and advert, then retry.';
+      case 'empty_completion': return 'Nothing came back for this section. Retry it.';
+      default: return 'Something went wrong while writing this section. Retry it.';
+    }
+  }
+  var HARD_STOP = { no_key: 1, bad_key: 1, not_granted: 1, sampling_disabled: 1, capability_disabled: 1, capability_removed: 1, not_declared: 1, rate_limited: 1, session_expired: 1, cancelled: 1 };
+
+  async function ask(prompt, opts) {
+    state.ctl = new AbortController();
+    var o = { signal: state.ctl.signal, cache: false };
+    if (opts && opts.onText) o.onText = opts.onText;
+    return state.sample(prompt, o);
+  }
+
+  async function analyse() {
+    var prompt = 'Read the job advert below and reply with only one JSON object in this shape:\n' +
+      '{"role": string, "organisation": string, "grade": string or null, "location": string or null, ' +
+      '"behaviours": [exact names of the Civil Service behaviours or strengths the advert asks applicants to evidence, in the order listed], ' +
+      '"essential": [up to 8 short essential criteria], "desirable": [up to 5 short items], ' +
+      '"technical": [tools and technical skills required, up to 10], "keywords": [up to 12 words or phrases worth echoing], ' +
+      '"values": [organisational values or objectives, up to 5], ' +
+      '"personalStatementWordLimit": number or null, "behaviourWordLimit": number or null, ' +
+      '"applicationQuestions": [other application questions the advert asks, each with its word limit if given]}\n' +
+      'Use null or [] wherever the advert does not say. Do not guess.\n\n<job_description>\n' + state.jd + '\n</job_description>';
+    state.ctl = new AbortController();
+    return state.sample.json(prompt, { modelTier: 'quick', signal: state.ctl.signal, cache: false });
+  }
+
+  function applyLimits(a) {
+    if (!a) return;
+    var notes = [];
+    var ps = Number(a.personalStatementWordLimit), bw = Number(a.behaviourWordLimit);
+    if (ps > 0 && !state.touched.statement) { state.limits.statement = ps; els.limStatement.value = ps; notes.push('personal statement ' + ps); }
+    if (bw > 0 && !state.touched.star) { state.limits.star = bw; els.limStar.value = bw; notes.push('behaviours ' + bw); }
+    if (notes.length) setStatus('Word limits set from the advert: ' + notes.join(', ') + '.');
+  }
+
+  async function fixStatement() {
+    var s = state.sections[2], lim = state.limits.statement;
+    for (var k = 0; k < 2 && wc(strip(s.text)) > lim; k++) {
+      s.note = 'Tightening to the ' + fmt(lim) + ' word limit\u2026'; scheduleRender(2); renderPanelNoteOnly();
+      var r = await ask('Shorten the personal statement below to at most ' + (lim - 10) + ' words without losing its strongest examples or changing any facts. Keep it in the first person, in British English, in 5 to 7 paragraphs with no headings. Keep any [ADD: ...] placeholders. Output only the shortened statement.\n\n' + s.text);
+      s.text = r.text.trim();
+    }
+    s.note = '';
+  }
+
+  async function fixStar() {
+    var s = state.sections[3], W = state.limits.star;
+    var blocks = parseStar(s.text);
+    for (var k = 0; k < blocks.length; k++) {
+      if (starWords(blocks[k]) <= W) continue;
+      s.note = 'Tightening "' + blocks[k].name + '" to the ' + W + ' word limit\u2026'; renderPanelNoteOnly();
+      var r = await ask('Shorten this behaviour statement to at most ' + (W - 10) + ' words in total, counting every word after the S:/T:/A:/R: markers. Keep the facts, any [ADD: ...] placeholders, the S:/T:/A:/R: layout and the first line beginning "=== ". Output only the statement.\n\n' + starSerialize([blocks[k]]));
+      var fixed = parseStar(r.text);
+      if (fixed.length) { fixed[0].notes = blocks[k].notes; blocks[k] = fixed[0]; }
+    }
+    s.note = '';
+    s.text = starSerialize(blocks);
+  }
+
+  function renderPanelNoteOnly() {
+    if (!state.sections[state.tab].editing) renderPanel();
+  }
+
+  async function runSection(i) {
+    var s = state.sections[i];
+    s.status = 'writing'; s.text = ''; s.error = ''; s.note = ''; s.truncated = false; s.editing = false;
+    if (state.follow) state.tab = i;
+    renderTabs(); if (state.tab === i) renderPanel();
+    try {
+      var res = await ask(buildPrompt(i), { onText: function (u) { s.text = u.text; scheduleRender(i); } });
+      s.text = res.text.trim(); s.truncated = !!res.truncated;
+      if (i === 2 && !s.truncated) await fixStatement();
+      if (i === 3 && !s.truncated) await fixStar();
+      s.status = 'done';
+      renderTabs(); if (state.tab === i) renderPanel();
+      return true;
+    } catch (e) {
+      s.status = 'error'; s.error = errCopy(e); s.note = '';
+      if (e && e.text) s.text = String(e.text);
+      if (e && e.code === 'refused') s.text = '';
+      renderTabs(); if (state.tab === i) renderPanel();
+      state.lastErr = e;
+      return false;
+    }
+  }
+
+  function validate() {
+    if (!state.cv.trim()) { setStatus('Add your CV first. Upload a file or paste the text.', true); els.cv.focus(); return false; }
+    if (!state.jd.trim()) { setStatus('Add the job advert first. Upload a file or paste the text.', true); els.jd.focus(); return false; }
+    if (wc(state.jd) < 25) { setStatus('The advert looks very short. Paste the full text, including the behaviours and any word limits.', true); els.jd.focus(); return false; }
+    return true;
+  }
+
+  async function ensureSample() {
+    if (state.sample) return true;
+    await state.ready;
+    if (!state.sample) { setStatus('Claude is not available in this view. Open this page inside Claude to build your application.', true); return false; }
+    return true;
+  }
+
+  async function generate() {
+    if (state.running || !validate()) return;
+    if (!(await ensureSample())) return;
+    state.running = true; state.follow = true; state.analysis = null; state.tab = 0;
+    state.sections.forEach(function (s) { s.status = 'idle'; s.text = ''; s.error = ''; s.note = ''; s.truncated = false; s.editing = false; });
+    renderAll();
+    if (window.matchMedia('(max-width: 900px)').matches) els.results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setStatus('Reading the advert\u2026');
+    try {
+      state.analysis = await analyse();
+      applyLimits(state.analysis);
+      renderBrief();
+    } catch (e) {
+      if (e && HARD_STOP[e.code]) { setStatus(errCopy(e), true); state.running = false; renderAll(); return; }
+      state.analysis = null;
+    }
+    var done = 0;
+    for (var i = 0; i < SECTIONS.length; i++) {
+      setStatus('Writing part ' + (i + 1) + ' of 5: ' + SECTIONS[i].title + '\u2026');
+      var ok = await runSection(i);
+      if (!ok) { setStatus('Stopped at part ' + (i + 1) + '. ' + errCopy(state.lastErr), true); break; }
+      done++;
+    }
+    state.running = false;
+    if (done === SECTIONS.length) setStatus('All five parts are ready. Check anything highlighted in amber, then copy each into your application.');
+    renderAll();
+  }
+
+  async function regen(i) {
+    if (state.running || !validate()) return;
+    if (!(await ensureSample())) return;
+    state.running = true; state.follow = false;
+    renderAll();
+    setStatus('Rewriting part ' + (i + 1) + '\u2026');
+    if (!state.analysis) { try { state.analysis = await analyse(); renderBrief(); } catch (e) { state.analysis = null; } }
+    var ok = await runSection(i);
+    state.running = false;
+    setStatus(ok ? 'Part ' + (i + 1) + ' rewritten.' : errCopy(state.lastErr), !ok);
+    renderAll();
+  }
+
+  /* ---------- copy / save ---------- */
+  async function copyText(text, btn) {
+    var label = btn ? btn.textContent : '';
+    function flash(msg) { if (!btn) return; btn.textContent = msg; setTimeout(function () { btn.textContent = label; }, 1400); }
+    try { await navigator.clipboard.writeText(text); flash('Copied'); return; } catch (e) { /* fall through */ }
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta);
+      ta.select(); var ok = document.execCommand('copy'); document.body.removeChild(ta);
+      flash(ok ? 'Copied' : 'Select and copy');
+    } catch (e2) { flash('Select and copy'); }
+  }
+
+  /* ---------- events ---------- */
+  function wire() {
+    ['cv', 'jd'].forEach(function (kind) {
+      els[kind].addEventListener('input', function () { onInput(kind); });
+      var file = $('#' + kind + '-file');
+      file.addEventListener('change', function () { handleFile(file.files[0], kind); file.value = ''; });
+      var ta = els[kind];
+      ta.addEventListener('dragover', function (e) { e.preventDefault(); ta.classList.add('drag'); });
+      ta.addEventListener('dragleave', function () { ta.classList.remove('drag'); });
+      ta.addEventListener('drop', function (e) {
+        e.preventDefault(); ta.classList.remove('drag');
+        var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f) handleFile(f, kind);
+      });
+    });
+    document.querySelectorAll('[data-pick]').forEach(function (b) {
+      b.addEventListener('click', function () { $('#' + b.dataset.pick + '-file').click(); });
+    });
+    els.cvClear.addEventListener('click', function () { els.cv.value = ''; onInput('cv'); lsDel('ad-cv'); });
+    els.jdClear.addEventListener('click', function () { els.jd.value = ''; onInput('jd'); });
+
+    els.limStatement.addEventListener('input', function () { var v = parseInt(els.limStatement.value, 10); if (v > 0) { state.limits.statement = v; state.touched.statement = true; if (state.tab === 2) { var m = $('#meters'); if (m) m.innerHTML = meterChips(2); } } });
+    els.limStar.addEventListener('input', function () { var v = parseInt(els.limStar.value, 10); if (v > 0) { state.limits.star = v; state.touched.star = true; if (state.tab === 3) { renderPanel(); } } });
